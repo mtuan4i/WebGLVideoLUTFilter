@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+<style>
+    .slider {
+        -webkit-appearance: none;
+        width: 50%;
+        height: 25px;
+        background: #d3d3d3;
+        outline: none;
+        opacity: 0.7;
+        -webkit-transition: .2s;
+        transition: opacity .2s;
+    }
+
+    .slider::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 50px;
+        height: 50px;
+        background: #4CAF50;
+        cursor: pointer;
+        border-radius: 50%;
+    }
+
+    .slider::-moz-range-thumb {
+        width: 50px;
+        height: 50px;
+        background: #4CAF50;
+        cursor: pointer;
+        border-radius: 50%;
+    }
+
+    .mybutton {
+        font-size: 20px; width: 30%; height: 50px;
+    }
+</style>
+<body>
+<video id="myVideo" loop muted playsinline style="position: absolute; top: -9999px; left: -9999px;">
+</video>
+<canvas id="c"></canvas>
+<div id="gui" align="center">
+    <br><br><br>
+    <button id="playBut" class="mybutton">Play Video</button>
+    <br><br><br>
+    <input type="range" min="1" max="100" value="100" class="slider" id="myRange">
+    <br><br><br>
+</div>
+<script type="module">
+    import * as THREE from './three.module.js';
+    import {TexturedQuad} from "./TexturedQuad.js";
+
+    let video;
+    let fsQuad;
+    let renderer;
+
+    video = document.getElementById('myVideo');
+    video.crossOrigin ="anonymous";
+    video.src = "./Earth.mov";
+    video.addEventListener('loadedmetadata', init);
+    video.load();
+
+    let button = document.getElementById('playBut');
+
+    let slider = document.getElementById("myRange");
+    slider.addEventListener('input', function() {
+        fsQuad.setParameter(this.value / 100.0);
+    });
+
+    function init() {
+        const canvas = document.querySelector("#c");
+        renderer = new THREE.WebGLRenderer({canvas});
+        renderer.setPixelRatio(window.devicePixelRatio);
+        const viewSize = {w: window.innerWidth, h: (video.videoHeight / video.videoWidth) * window.innerWidth};
+        renderer.setSize(viewSize.w, viewSize.h);
+
+        fsQuad = new TexturedQuad(renderer, video);
+
+        paintVideo();
+
+        button.addEventListener('click', () => {
+            // video.addEventListener('playing', paintVideo);
+            video.play();
+        })
+
+        for (let i = 0; i < 3; i++) {
+            let bi = document.createElement('button');
+            bi.className = 'mybutton';
+            bi.innerText = 'LUT ' + i;
+            document.getElementById('gui').appendChild(bi);
+            bi.addEventListener('click', () => {
+                fsQuad.setLUT('./LUT' + i + '.png');
+            })
+        }
+    }
+
+    function paintVideo()
+    {
+        function render() {
+            fsQuad.render();
+            requestAnimationFrame(render);
+        }
+
+        requestAnimationFrame(render);
+
+        // if (!canvas) {
+        //     canvas = document.createElement('canvas');
+        //     canvas.width = video.videoWidth;
+        //     canvas.height = video.videoHeight;
+        //     document.body.appendChild(canvas);
+        // }
+        // canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+        // if (!video.paused)
+        //     requestAnimationFrame(paintVideo);
+    }
+
+    // startPlayback();
+    // paintVideo();
+</script>
+
+</body>
+</html>
